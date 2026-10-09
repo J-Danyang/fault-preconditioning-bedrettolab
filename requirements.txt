@@ -1,0 +1,7 @@
+# Post-processing and figures (tested with Python 3.10)
+numpy
+pandas
+pyarrow
+scipy
+matplotlib
+jupyter

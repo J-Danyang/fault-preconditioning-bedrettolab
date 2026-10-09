@@ -1,0 +1,120 @@
+;FLAC3D model configuration
+model new
+model deterministic on
+zone mechanical damping combined
+model configure thermal
+model configure fluid
+
+; Load mesh
+zone import '../../00_mesh/OUTPUT1_mesh.f3grid'
+
+
+; NOTE: take properties for granite
+; Hydraulic parameters 
+; fluid-modulus 1.0 can only be used when Biot = 1.0
+zone fluid cmodel assign isotropic
+zone gridpoint initialize fluid-modulus 2.2e9
+zone fluid biot on 
+zone fluid property biot 1e-3
+zone gridpoint initialize saturation 1
+
+zone fluid property permeability 6e-14 range group 'INTEM'
+zone fluid property porosity 0.03 range group 'INTEM'
+zone gridpoint initialize biot 79.522e9 range group 'INTEM'
+
+zone fluid property permeability 6e-15 range group 'CORER'
+zone fluid property porosity 0.024 range group 'CORER'
+zone gridpoint initialize biot 99.33e9 range group 'CORER'
+
+zone fluid property permeability 3e-15 range group 'COREM' union group 'COREL'
+zone fluid property porosity 0.02 range group 'COREM' union group 'COREL'
+zone gridpoint initialize biot 119.11e9 range group 'COREM' union group 'COREL'
+
+zone fluid property permeability 3.5e-14 range group 'INTER' union group 'INTEL'
+zone fluid property porosity 0.027 range group 'INTER' union group 'INTEL'
+zone gridpoint initialize biot 88.329e9 range group 'INTER' union group 'INTEL'
+
+zone fluid property permeability 1e-16 range group 'RIGHB' union group 'LEFTB' union group 'TOPPB' union group 'BOTTB' union group 'FRONB' union group 'BACKB'
+zone fluid property porosity 0.0175 range group 'RIGHB' union group 'LEFTB' union group 'TOPPB' union group 'BOTTB' union group 'FRONB' union group 'BACKB'
+zone fluid property permeability 1e-17 range group 'ROCKS'
+zone fluid property porosity 0.0175 range group 'ROCKS'
+zone gridpoint initialize biot 136.04e9 range group 'RIGHB' union group 'LEFTB' union group 'TOPPB' union group 'BOTTB' union group 'FRONB' union group 'BACKB' union group 'ROCKS'
+
+; Mechanical parameters
+; poisson and young's modulus from Ma et al. 2022
+
+zone cmodel assign softening-ubiquitous range group 'INTEM' union group 'INTER' union group 'INTEL'
+zone property young 30e9 poisson 0.25 density 2620 range group 'INTEM' union group 'INTER' union group 'INTEL'
+zone property friction 40 cohesion 1e10 range group 'INTEM' union group 'INTER' union group 'INTEL'
+table 'fri' add (0,24) (1e-5, 19.5)
+zone property dip-direction -90 dip 73.5 joint-friction 24 joint-cohesion 2e6 joint-dilation 0 joint-tension 0 table-joint-friction 'fri' range group 'INTEM' union group 'INTER' union group 'INTEL'
+
+zone cmodel assign softening-ubiquitous range group 'COREM' union group 'CORER' union group 'COREL'
+zone property young 30e9 poisson 0.25 density 2620 range group 'COREM' union group 'CORER' union group 'COREL'
+zone property friction 40 cohesion 1e13 range group 'COREM' union group 'CORER' union group 'COREL'
+table 'fri_cor' add (0,21) (1e-5, 16.5)
+zone property dip-direction -90 dip 73.5 joint-friction 21 joint-cohesion 2e9 joint-dilation 0 joint-tension 0 table-joint-friction 'fri_cor' range group 'COREM' union group 'CORER' union group 'COREL'
+
+zone cmodel assign elastic range group 'ROCKS' union group 'RIGHB' union group 'LEFTB' union group 'TOPPB' union group 'BOTTB' union group 'FRONB' union group 'BACKB'
+zone property young 30e9 poisson 0.36 density 2620 range group 'ROCKS' union group 'RIGHB' union group 'LEFTB' union group 'TOPPB' union group 'BOTTB' union group 'FRONB' union group 'BACKB'
+
+; Thermal parameters
+zone thermal cmodel assign isotropic
+zone thermal property conductivity 4.0
+zone thermal property expansion 1e-9
+zone thermal property specific-heat 790
+
+;  In situ stress
+zone initialize stress-xx -2.0473e7 gradient 0 0 19559.9133
+zone initialize stress-yy -2.0135e7 gradient 0 0 19235.8603
+zone initialize stress-xy -5.4795e6 gradient 0 0 5234.9226
+zone initialize stress-zz -2.6903e7 gradient 0 0 25702.2
+zone initialize density 2620
+model gravity 0 0 -9.81
+
+; In situ pressure and temperature
+zone gridpoint initialize pore-pressure 6.8e6 gradient 0 0 -9.81e3
+zone gridpoint initialize temperature 19.4 gradient 0 0 -0.020855
+
+; Mechanical boundaries
+zone face apply stress-xx -2.0473e7 gradient 0 0 19559.9133 range position-x 145 150
+zone face apply stress-xx -2.0473e7 gradient 0 0 19559.9133 range position-x -150 -145
+zone face apply stress-xy -5.4795e6 gradient 0 0 5234.9226 range position-x 145 150
+zone face apply stress-xy -5.4795e6 gradient 0 0 5234.9226 range position-x -150 -145
+zone face apply stress-xz -0.0e6 gradient 0 0 0 range position-x 145 150
+zone face apply stress-xz -0.0e6 gradient 0 0 0 range position-x -150 -145
+
+zone face apply stress-yy -2.0135e7 gradient 0 0 19235.8603 range position-y 244 250
+zone face apply stress-yy -2.0135e7 gradient 0 0 19235.8603 range position-y -250 -244
+zone face apply stress-xy -5.4795e6 gradient 0 0 5234.9226 range position-y 244 250
+zone face apply stress-xy -5.4795e6 gradient 0 0 5234.9226 range position-y -250 -244
+zone face apply stress-yz -0.0e6 gradient 0 0 0 range position-y 244 250
+zone face apply stress-yz -0.0e6 gradient 0 0 0 range position-y -250 -244
+
+zone face apply stress-xz -0.0e6 gradient 0 0 0 range position-z 245 250
+zone face apply stress-yz -0.0e6 gradient 0 0 0 range position-z 245 250
+zone face apply stress-zz -2.6903e7 gradient 0 0 25702.2 range position-z 245 250
+zone face apply stress-xz -0.0e6 gradient 0 0 0 range position-z -250 -245
+zone face apply stress-yz -0.0e6 gradient 0 0 0 range position-z -250 -245
+zone face apply stress-zz -2.6903e7 gradient 0 0 25702.2 range position-z -250 -245
+
+;zone gridpoint fix velocity-z range position-z -250 -245
+;zone gridpoint fix velocity-x range position-x -150 -145
+;zone gridpoint fix velocity-y range position-y -200 -195
+;zone gridpoint fix velocity-x range position-x 145 150
+;zone gridpoint fix velocity-y range position-y 195 200
+;zone gridpoint fix velocity-z range position-z 245 250
+
+; Disable large strain (only FLAC3D v7)
+model large-strain off
+
+; Solve model for mechanical equilibrium
+model solve mech ratio 1.0e-7
+
+; Reset diplacements in all the model
+zone gridpoint initialize displacement-x 0
+zone gridpoint initialize displacement-y 0
+zone gridpoint initialize displacement-z 0
+
+; Save model
+model save 'tf_in.f3sav'
